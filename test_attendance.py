@@ -1,46 +1,38 @@
-from attendance import (
-    create_attendance_session,
-    record_attendance,
-    update_attendance,
-    get_attendance_history,
-    get_student_statistics
-)
 
-# 1. Tao buoi diem danh
-print("===== TAO BUOI DIEM DANH =====")
+import unittest
+from attendance_service import AttendanceService
 
-create_attendance_session(
-    "DD001",
-    "Nhap mon lap trinh",
-    "K46A",
-    "02/11/2026",
-    "07:00"
-)
+class TestAttendanceService(unittest.TestCase):
+    
+    def setUp(self):
+        self.service = AttendanceService()
 
-# 2. Ghi nhan diem danh
-print("\n===== GHI NHAN DIEM DANH =====")
+    def test_record_attendance_success(self):
+        """Test điểm danh thành công"""
+        success = self.service.record_attendance("S01", "SV001", "PRESENT")
+        self.assertTrue(success)
+        
+        records = self.service.get_attendance_by_session("S01")
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["student_id"], "SV001")
+        self.assertEqual(records[0]["status"], "PRESENT")
 
-record_attendance("DD001", "SV001", "Nguyen Van A", "Co mat")
-record_attendance("DD001", "SV002", "Tran Van B", "Vang mat")
-record_attendance("DD001", "SV003", "Le Van C", "Co mat")
+    def test_duplicate_attendance_fail(self):
+        """Test chống trùng lặp điểm danh trong cùng một buổi (Nhiệm vụ 7)"""
+        self.service.record_attendance("S01", "SV001", "PRESENT")
+        
+        with self.assertRaises(ValueError) as context:
+            self.service.record_attendance("S01", "SV001", "LATE")
+            
+        self.assertEqual(str(context.exception), "Sinh viên này đã được điểm danh trong buổi học này rồi!")
 
-# 3. Cap nhat trang thai
-print("\n===== CAP NHAT DIEM DANH =====")
+    def test_invalid_status_fail(self):
+        """Test trạng thái điểm danh không hợp lệ"""
+        with self.assertRaises(ValueError) as context:
+            self.service.record_attendance("S01", "SV002", "INVALID")
+            
+        self.assertEqual(str(context.exception), "Trạng thái điểm danh không hợp lệ! Chỉ chấp nhận: PRESENT, LATE, ABSENT.")
 
-update_attendance("DD001", "SV002", "Co mat")
+if __name__ == "__main__":
+    unittest.main()
 
-# 4. Xem lich su
-print("\n===== LICH SU DIEM DANH =====")
-
-history = get_attendance_history("SV001")
-
-for record in history:
-    print(record)
-
-# 5. Thong ke
-print("\n===== THONG KE DIEM DANH =====")
-
-statistics = get_student_statistics("SV001")
-
-for key, value in statistics.items():
-    print(key, ":", value)
