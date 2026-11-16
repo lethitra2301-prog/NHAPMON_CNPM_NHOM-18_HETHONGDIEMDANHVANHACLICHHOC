@@ -1,3 +1,4 @@
+
 import unittest
 from attendance_service import AttendanceService
 
@@ -34,3 +35,4 @@ class TestAttendanceService(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
